@@ -1,12 +1,15 @@
 from flask import Flask, request
 from Src.settings_manager import settings_manager
 from Src.Storage.storage import storage
+from Src.Logics.nomenclature_service import nomenclature_service
+from Src.Models.nomenclature_model import nomenclature_model
 from Src.errors import error_proxy
 from Src.Logics.report_factory import report_factory
 from Src.Logics.start_factory import start_factory
 from datetime import datetime
 from Src.Logics.storage_service import storage_service
 from Src.Models.nomenclature_model import nomenclature_model
+import json
 
 
 app = Flask(__name__)
@@ -17,6 +20,50 @@ options = settings_manager()
 start = start_factory(options.settings)
 start.create()
 
+nomenclature_service_instance = nomenclature_service(start.storage.data)
+
+
+@app.route("/api/nomenclature", methods=["PUT"])
+def add_nomenclature():
+    try:
+        data = request.get_json()
+        nomenclature_service_instance.add_nomenclature(data)
+        start.storage.save()
+        return storage_service.create_response(app, "ok")
+    except Exception as ex:
+        return error_proxy.create_error_response(app, f"Error processing: {ex}", 500)
+
+
+@app.route("/api/nomenclature/<nomenclature_id>", methods=["PATCH"])
+def change_nomenclature(nomenclature_id):
+    try:
+        data = request.get_json()
+        nomenclature_service_instance.change_nomenclature(nomenclature_id, data)
+        start.storage.save()
+        return storage_service.create_response(app, "ok")
+    except Exception as ex:
+        return error_proxy.create_error_response(app, f"Error processing: {ex}", 500)
+
+
+@app.route("/api/nomenclature/<nomenclature_id>", methods=["GET"])
+def get_nomenclature(nomenclature_id):
+    try:
+        result = nomenclature_service_instance.get_nomenclature(nomenclature_id)
+        return storage_service.create_response(result, app)
+    except Exception as ex:
+        return error_proxy.create_error_response(app, f"Error processing: {ex}", 500)
+
+
+@app.route("/api/nomenclature/<nomenclature_id>", methods=["DELETE"])
+def delete_nomenclature(nomenclature_id):
+    try:
+        if nomenclature_service_instance.delete_nomenclature(nomenclature_id):
+            start.storage.save()
+            return storage_service.create_response(app, "ok")
+        else:
+            return error_proxy.create_error_response(app, "Nomenclature not found", 404)
+    except Exception as ex:
+        return error_proxy.create_error_response(app, f"Error processing: {ex}", 500)
 
 @app.route("/api/report/<storage_key>", methods = ["GET"])
 def get_report(storage_key: str):
@@ -88,7 +135,22 @@ def get_turns_nomenclature(nomenclature_id):
       
     data = storage_service( transactions_data  ).create_turns_by_nomenclature( start_date, stop_date, nomenclature )      
     result = storage_service.create_response( data, app )
-    return result      
+    return result
+
+@app.route("/api/change_block_period", methods=["GET"])
+def change_block_period():
+    block_period = request.args.get("block_period")
+    if block_period:
+        try:
+            block_date = datetime.strptime(block_period, "%Y-%m-%d")
+            options.settings.block_period = block_date
+            options.save()
+            response_data = {"status": "success", "message": "Block period uodated successfully!", "block_period": options.settings.block_period.strftime("%Y-%m-%d")}
+            return json.dumps(response_data), 200
+        except Exception as ex:
+            return error_proxy.create_error_response(app, f"Ошибка запроса {ex}", 400)
+    else:
+        return error_proxy.create_error_response(app, "Параметр 'block_period' не найден!", 400)
 
 if __name__ == "__main__":
     app.run(debug = True)

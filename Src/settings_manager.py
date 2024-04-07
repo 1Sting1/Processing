@@ -86,6 +86,14 @@ class settings_manager(object):
                 # Если обычное свойство - заполняем.
                 if not isinstance(value, list) and not isinstance(value, dict):
                     setattr(self._settings, field, value)
+
+    def save(self):
+        try:
+            with open(self._settings_file_name, "w") as write_file:
+                json.dumps(vars(self._settings), write_file, indent=4)
+
+        except Exception as ex:
+            self._error.set_error(ex)
                 
         
     
