@@ -1,4 +1,5 @@
 from Src.exceptions import exception_proxy
+from datetime import datetime
 
 #
 # Класс для описания настроек
@@ -8,6 +9,7 @@ class settings():
     _short_name = ""
     _first_start = True
     _mode = "csv"
+    __block_period = None
     
     
     @property
@@ -65,4 +67,15 @@ class settings():
         exception_proxy.validate(value, str)
         
         self._mode = value
+
+    @property
+    def block_period(self):
+        return self.__block_period
+
+    @block_period.setter
+    def block_period(self, value: datetime):
+        if not isinstance(value, datetime):
+            raise Exception("Некорректная дата блокировки!")
+
+        self.__block_period = value
     
