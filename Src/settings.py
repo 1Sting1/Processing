@@ -1,81 +1,110 @@
-from Src.exceptions import exception_proxy
-from datetime import datetime
+from src.errors import error_proxy
+from enum import Enum
 
 #
 # Класс для описания настроек
 #
+
+class ReportFormat(Enum):
+    CSV = 1
+    Markdown = 2
+    Json = 3
 class settings():
-    _inn = 0
-    _short_name = ""
+    _name = ""
+    _inn = ""
     _first_start = True
-    _mode = "csv"
-    __block_period = None
+    _check = ""
+    _corr_check = ""
+    _bik = ""
+    _type_of_company = ""
+    _report_format = ReportFormat.CSV
     
     
     @property
     def inn(self):
-        """
-            ИНН
-        Returns:
-            int: 
-        """
         return self._inn
     
     @inn.setter
-    def inn(self, value: int):
-        exception_proxy.validate(value, int)
-        self._inn = value
+    def inn(self, value: str):
+        if not isinstance(value.strip(), str) or len(value.strip()) != 12:
+            error_proxy.set_error(Exception("Некорректный ИНН!"))
+
+        self._inn = value.strip()
          
     @property     
-    def short_name(self):
-        """
-            Короткое наименование организации
-        Returns:
-            str:
-        """
-        return self._short_name
+    def name(self):
+        return self.name
     
-    @short_name.setter
-    def short_name(self, value:str):
-        exception_proxy.validate(value, str)
-        self._short_name = value
-        
-        
+    @name.setter
+    def name(self, value:str):
+        if not isinstance(value.strip(), str):
+            error_proxy.set_error(Exception("Некорректное наименование!"))
+
+        self._name = value.strip()
+
     @property    
     def is_first_start(self):
-        """
-           Флаг Первый старт
-        """
+
         return self._first_start    
             
     @is_first_start.setter        
     def is_first_start(self, value: bool):
         self._first_start = value
+
+    @property
+    def check(self):
+        return self.__check
+
+    @check.setter
+    def check(self, value: str):
+        if not isinstance(value.strip(), str) or len(value.strip()) != 11:
+            error_proxy.set_error(Exception("Некорректный счет!"))
+
+        self.__check = value.strip()
+
+    @property
+    def corr_check(self):
+        return self.__corr_check
+
+    @corr_check.setter
+    def corr_check(self, value: str):
+        if not isinstance(value.strip(), str) or len(value.strip()) != 11:
+            error_proxy.set_error(Exception("Некорректный корреспондентский счет!"))
+
+        self.__corr_check = value.strip()
+
+    @property
+    def bik(self):
+        return self._bik
+
+    @bik.setter
+    def bik(self, value: str):
+        if not isinstance(value.strip(), str) or len(value.strip()) != 9:
+            error_proxy.set_error(Exception("Некорректный БИК!"))
+
+        self._bik = value.strip()
         
     @property
     def report_mode(self):
-        """
-            Режим построения отчетности
-        Returns:
-            _type_: _description_
-        """
+
         return self._mode
-    
-    
-    @report_mode.setter
-    def report_mode(self, value: str):
-        exception_proxy.validate(value, str)
-        
-        self._mode = value
 
     @property
-    def block_period(self):
-        return self.__block_period
+    def type_of_company(self):
+        return self.__type_of_company
 
-    @block_period.setter
-    def block_period(self, value: datetime):
-        if not isinstance(value, datetime):
-            raise Exception("Некорректная дата блокировки!")
+    @type_of_company.setter
+    def type_of_company(self, value: str):
+        if not isinstance(value.strip(), str) or len(value.strip()) != 5:
+            error_proxy.set_error(Exception("Некорректный вид собственности!"))
 
-        self.__block_period = value
+        self.__type_of_company = value.strip()
+
+    @property
+    def report_format(self):
+        return self._report_format
+
+    @report_format.setter
+    def report_format(self, value: ReportFormat):
+        self._report_format = value
     
