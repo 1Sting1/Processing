@@ -149,4 +149,8 @@ class storage():
             if method.__name__.endswith("_key") and callable(method):
                 keys.append(method())
         return keys
+
+    @staticmethod
+    def turn_key():
+        return "block_turn"
     

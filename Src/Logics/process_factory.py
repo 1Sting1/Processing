@@ -40,6 +40,39 @@ class process_factory:
         return current_processing
     
     # Статические методы
+
+    @staticmethod
+    def process_storage_turn(journal: list):
+        def _validate_journal(journal):
+            if not isinstance(journal, list):
+                raise ArgumentError("Неверный аргумент")
+            if len(journal) == 0:
+                return False
+            if not isinstance(journal[0], storage_row_turn_model):
+                raise ArgumentError("Неверный массив")
+            return True
+
+        if not _validate_journal(journal):
+            return []
+
+        result = {}
+
+        for cur_line in journal:
+            # айди склада и имя номенклатуры, для того чтобы рассортировать строки складского журнала
+            key = cur_line.nomenclature.name + ' ' + str(cur_line.storage_id)
+            keys = list(result.keys())
+
+            koef = 1 - 2 * (cur_line.operation_type == "delete")
+
+            if key in keys:
+                result[key].amount += cur_line.amount * koef
+            else:
+                # в turnmodel хранятся данные о складе, а также количестве, типе и единицах измерения номенклатуры
+                result[key] = turn_processing.create_turn(cur_line.storage_id, cur_line.amount * koef,
+                                                          cur_line.nomenclature, cur_line.nomenclature.ran_mod)
+
+        return list(result.values())
+
         
     @staticmethod
     def turn_key() -> str:
